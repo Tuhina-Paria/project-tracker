@@ -2,17 +2,22 @@ import { create } from "zustand";
 import type { Task } from "../types/task";
 import { tasks as initialTasks } from "../utils/data";
 
-type TaskStore = {
+type TaskState = {
   tasks: Task[];
-
-  addTask: (task: Task) => void;
+  updateTaskStatus: (id: string, status: Task["status"]) => void;
 };
 
-export const useTaskStore = create<TaskStore>((set) => ({
-  tasks: initialTasks,
+export const useTaskStore = create<TaskState>((set) => ({
+  tasks: JSON.parse(localStorage.getItem("tasks") || "null") || initialTasks,
 
-  addTask: (task) =>
-    set((state) => ({
-      tasks: [...state.tasks, task],
-    })),
+  updateTaskStatus: (id, status) =>
+    set((state) => {
+      const updated = state.tasks.map((task) =>
+        task.id === id ? { ...task, status } : task
+      );
+
+      localStorage.setItem("tasks", JSON.stringify(updated));
+
+      return { tasks: updated };
+    }),
 }));
