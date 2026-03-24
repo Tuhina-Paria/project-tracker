@@ -5,6 +5,7 @@ import { tasks as initialTasks } from "../utils/data";
 type TaskState = {
   tasks: Task[];
   updateTaskStatus: (id: string, status: Task["status"]) => void;
+  addTask: (task: Task) => void;
 };
 
 export const useTaskStore = create<TaskState>((set) => ({
@@ -17,7 +18,14 @@ export const useTaskStore = create<TaskState>((set) => ({
       );
 
       localStorage.setItem("tasks", JSON.stringify(updated));
+      return { tasks: updated };
+    }),
 
+  addTask: (task) =>
+    set((state) => {
+      const updated = [...state.tasks, task];
+
+      localStorage.setItem("tasks", JSON.stringify(updated));
       return { tasks: updated };
     }),
 }));
