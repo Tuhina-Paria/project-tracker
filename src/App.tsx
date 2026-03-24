@@ -1,6 +1,12 @@
+import { tasks } from "./utils/data";
+
 function App() {
   return (
-    <h1 className="text-3xl text-green-500">Tailwind Working 🚀</h1>
+    <div className="p-4">
+      <h1 className="text-xl font-bold">
+        Total Tasks: {tasks.length}
+      </h1>
+    </div>
   );
 }
 
