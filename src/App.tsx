@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useTaskStore } from "./store/taskStore";
+import { FixedSizeList as List } from "react-window";
 
 function App() {
   const tasks = useTaskStore((state) => state.tasks);
   const updateTaskStatus = useTaskStore((state) => state.updateTaskStatus);
   const addTask = useTaskStore((state) => state.addTask);
 
-  // view switch
+  // view
   const [view, setView] = useState("kanban");
 
   // search + filter
@@ -195,7 +196,7 @@ function App() {
         <option value="critical">Critical</option>
       </select>
 
-      {/* KANBAN VIEW */}
+      {/* KANBAN */}
       {view === "kanban" && (
         <div className="grid grid-cols-4 gap-4">
           {renderColumn("todo", "Todo", "bg-gray-200")}
@@ -205,51 +206,44 @@ function App() {
         </div>
       )}
 
-      {/* LIST VIEW */}
+      {/* LIST WITH VIRTUAL SCROLL */}
       {view === "list" && (
-        <div className="overflow-auto">
-          <table className="w-full border">
-            <thead>
-              <tr className="bg-gray-200">
-                <th onClick={() => handleSort("title")} className="cursor-pointer p-2">
-                  Title
-                </th>
-                <th onClick={() => handleSort("priority")} className="cursor-pointer p-2">
-                  Priority
-                </th>
-                <th onClick={() => handleSort("dueDate")} className="cursor-pointer p-2">
-                  Due Date
-                </th>
-                <th className="p-2">Status</th>
-              </tr>
-            </thead>
+        <div style={{ height: "400px" }}>
+          <List
+            height={400}
+            itemCount={sortedTasks.length}
+            itemSize={60}
+            width="100%"
+          >
+            {({ index, style }) => {
+              const task = sortedTasks[index];
 
-            <tbody>
-              {sortedTasks.map((task) => (
-                <tr key={task.id} className="border-t">
-                  <td className="p-2">{task.title}</td>
-                  <td className="p-2">{task.priority}</td>
-                  <td className="p-2">
+              return (
+                <div
+                  style={style}
+                  className="flex justify-between items-center border-b px-4"
+                >
+                  <div>{task.title}</div>
+                  <div>{task.priority}</div>
+                  <div>
                     {new Date(task.dueDate).toLocaleDateString()}
-                  </td>
+                  </div>
 
-                  <td className="p-2">
-                    <select
-                      value={task.status}
-                      onChange={(e) =>
-                        handleStatusChange(task.id, e.target.value)
-                      }
-                    >
-                      <option value="todo">Todo</option>
-                      <option value="inprogress">In Progress</option>
-                      <option value="review">Review</option>
-                      <option value="done">Done</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  <select
+                    value={task.status}
+                    onChange={(e) =>
+                      handleStatusChange(task.id, e.target.value)
+                    }
+                  >
+                    <option value="todo">Todo</option>
+                    <option value="inprogress">In Progress</option>
+                    <option value="review">Review</option>
+                    <option value="done">Done</option>
+                  </select>
+                </div>
+              );
+            }}
+          </List>
         </div>
       )}
 
