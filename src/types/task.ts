@@ -1,9 +1,14 @@
+export type Activity = {
+  message: string;
+  time: string;
+};
+
 export type Task = {
   id: string;
   title: string;
-  status: "todo" | "inprogress" | "review" | "done";
-  priority: "low" | "medium" | "high" | "critical";
+  status: string;
+  priority: string;
   assignee: string;
-  startDate?: string;
   dueDate: string;
+  timeline: Activity[]; // 👈 NEW
 };

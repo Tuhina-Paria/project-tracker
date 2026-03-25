@@ -1,15 +1,27 @@
 import { create } from "zustand";
-import type { Task } from "../types/task";
-import { tasks as initialTasks } from "../utils/data";
+
+export type Task = {
+  id: string;
+  title: string;
+  status: "todo" | "inprogress" | "done";
+};
 
 type TaskState = {
   tasks: Task[];
-  updateTaskStatus: (id: string, status: Task["status"]) => void;
   addTask: (task: Task) => void;
+  updateTaskStatus: (id: string, status: Task["status"]) => void;
+  deleteTask: (id: string) => void;
 };
 
 export const useTaskStore = create<TaskState>((set) => ({
-  tasks: JSON.parse(localStorage.getItem("tasks") || "null") || initialTasks,
+  tasks: JSON.parse(localStorage.getItem("tasks") || "[]"),
+
+  addTask: (task) =>
+    set((state) => {
+      const updated = [...state.tasks, task];
+      localStorage.setItem("tasks", JSON.stringify(updated));
+      return { tasks: updated };
+    }),
 
   updateTaskStatus: (id, status) =>
     set((state) => {
@@ -21,10 +33,9 @@ export const useTaskStore = create<TaskState>((set) => ({
       return { tasks: updated };
     }),
 
-  addTask: (task) =>
+  deleteTask: (id) =>
     set((state) => {
-      const updated = [...state.tasks, task];
-
+      const updated = state.tasks.filter((task) => task.id !== id);
       localStorage.setItem("tasks", JSON.stringify(updated));
       return { tasks: updated };
     }),
