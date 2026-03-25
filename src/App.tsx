@@ -4,25 +4,29 @@ import { useTaskStore } from "./store/taskStore";
 const ROW_HEIGHT = 70;
 const VISIBLE_COUNT = 8;
 
+type Status = "todo" | "inprogress" | "review" | "done";
+type Priority = "low" | "medium" | "high" | "critical";
+
 function App() {
   const tasks = useTaskStore((state) => state.tasks);
   const addTask = useTaskStore((state) => state.addTask);
   const updateTaskStatus = useTaskStore((state) => state.updateTaskStatus);
   const deleteTask = useTaskStore((state) => state.deleteTask);
 
-  const [view, setView] = useState("kanban");
+  const [view, setView] = useState<"kanban" | "list">("kanban");
 
   const [title, setTitle] = useState("");
-  const [priority, setPriority] = useState("low");
-  const [status, setStatus] = useState("todo");
+  const [priority, setPriority] = useState<Priority>("low");
+  const [status, setStatus] = useState<Status>("todo");
   const [assignee, setAssignee] = useState("");
 
   const [search, setSearch] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState("all");
+  const [priorityFilter, setPriorityFilter] = useState<
+    "all" | Priority
+  >("all");
 
   const [scrollTop, setScrollTop] = useState(0);
 
-  // Avatar (person 1 → P1)
   const getAvatar = (name: string) => {
     if (!name) return "NA";
     const match = name.match(/\d+/);
@@ -30,7 +34,6 @@ function App() {
     return name.charAt(0).toUpperCase();
   };
 
-  // Filter
   const filteredTasks = tasks.filter((task) => {
     return (
       task.title.toLowerCase().includes(search.toLowerCase()) &&
@@ -38,14 +41,12 @@ function App() {
     );
   });
 
-  // Virtual Scroll
   const startIndex = Math.floor(scrollTop / ROW_HEIGHT);
   const visibleTasks = filteredTasks.slice(
     startIndex,
     startIndex + VISIBLE_COUNT
   );
 
-  // Add Task
   const handleAddTask = () => {
     if (!title.trim()) return;
 
@@ -62,13 +63,11 @@ function App() {
     setAssignee("");
   };
 
-  // Drag & Drop (FIXED)
   const handleDragStart = (e: React.DragEvent, id: string) => {
     e.dataTransfer.setData("taskId", id);
-    e.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDrop = (e: React.DragEvent, newStatus: string) => {
+  const handleDrop = (e: React.DragEvent, newStatus: Status) => {
     e.preventDefault();
     const id = e.dataTransfer.getData("taskId");
     if (!id) return;
@@ -79,8 +78,7 @@ function App() {
     e.preventDefault();
   };
 
-  // Column
-  const renderColumn = (colStatus: string, title: string) => {
+  const renderColumn = (colStatus: Status, title: string) => {
     const columnTasks = filteredTasks.filter(
       (t) => t.status === colStatus
     );
@@ -102,7 +100,6 @@ function App() {
             onDragStart={(e) => handleDragStart(e, task.id)}
             className="p-4 mb-3 bg-white rounded-xl shadow hover:shadow-xl hover:-translate-y-1 transition cursor-grab"
           >
-            {/* Title + Priority */}
             <div className="flex justify-between items-center mb-2">
               <span className="font-medium">{task.title}</span>
 
@@ -121,7 +118,6 @@ function App() {
               </span>
             </div>
 
-            {/* Assignee */}
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold">
                 {getAvatar(task.assignee)}
@@ -132,7 +128,6 @@ function App() {
               </span>
             </div>
 
-            {/* Delete */}
             <button
               onClick={() => deleteTask(task.id)}
               className="mt-2 text-xs text-red-500 hover:underline"
@@ -152,87 +147,47 @@ function App() {
         🚀 Task Manager Dashboard
       </h1>
 
-      {/* View Switch */}
       <div className="mb-4 flex flex-wrap gap-3">
-        <button
-          onClick={() => setView("kanban")}
-          className="px-4 py-2 rounded-lg bg-white shadow hover:bg-gray-200"
-        >
+        <button onClick={() => setView("kanban")} className="px-4 py-2 rounded-lg bg-white shadow">
           Kanban
         </button>
-
-        <button
-          onClick={() => setView("list")}
-          className="px-4 py-2 rounded-lg bg-white shadow hover:bg-gray-200"
-        >
+        <button onClick={() => setView("list")} className="px-4 py-2 rounded-lg bg-white shadow">
           List
         </button>
       </div>
 
-      {/* Add Task */}
       <div className="mb-6 p-5 bg-white rounded-2xl shadow-lg border">
         <h2 className="font-semibold mb-3">Add Task</h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-          <input
-            placeholder="Task title..."
-            className="px-3 py-2 border rounded-lg"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+          <input placeholder="Task title..." className="px-3 py-2 border rounded-lg" value={title} onChange={(e) => setTitle(e.target.value)} />
 
-          <input
-            placeholder="Assignee (person 1)..."
-            className="px-3 py-2 border rounded-lg"
-            value={assignee}
-            onChange={(e) => setAssignee(e.target.value)}
-          />
+          <input placeholder="Assignee..." className="px-3 py-2 border rounded-lg" value={assignee} onChange={(e) => setAssignee(e.target.value)} />
 
-          <select
-            className="px-3 py-2 border rounded-lg"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value)}
-          >
+          <select value={priority} onChange={(e) => setPriority(e.target.value as Priority)} className="px-3 py-2 border rounded-lg">
             <option value="low">Low</option>
             <option value="medium">Medium</option>
             <option value="high">High</option>
             <option value="critical">Critical</option>
           </select>
 
-          <select
-            className="px-3 py-2 border rounded-lg"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-          >
+          <select value={status} onChange={(e) => setStatus(e.target.value as Status)} className="px-3 py-2 border rounded-lg">
             <option value="todo">Todo</option>
             <option value="inprogress">In Progress</option>
             <option value="review">Review</option>
             <option value="done">Done</option>
           </select>
 
-          <button
-            onClick={handleAddTask}
-            className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
-          >
+          <button onClick={handleAddTask} className="bg-black text-white px-4 py-2 rounded-lg">
             Add
           </button>
         </div>
       </div>
 
-      {/* Search + Filter */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
-        <input
-          placeholder="Search..."
-          className="px-3 py-2 border rounded-lg flex-1"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <input placeholder="Search..." className="px-3 py-2 border rounded-lg flex-1" value={search} onChange={(e) => setSearch(e.target.value)} />
 
-        <select
-          className="px-3 py-2 border rounded-lg"
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
-        >
+        <select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value as any)} className="px-3 py-2 border rounded-lg">
           <option value="all">All</option>
           <option value="low">Low</option>
           <option value="medium">Medium</option>
@@ -241,7 +196,6 @@ function App() {
         </select>
       </div>
 
-      {/* Kanban */}
       {view === "kanban" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {renderColumn("todo", "Todo")}
@@ -251,31 +205,16 @@ function App() {
         </div>
       )}
 
-      {/* List View */}
       {view === "list" && (
-        <div
-          className="bg-white rounded-xl shadow overflow-y-auto"
-          style={{ height: 400 }}
-          onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
-        >
-          <div
-            style={{
-              height: filteredTasks.length * ROW_HEIGHT,
-              position: "relative",
-            }}
-          >
+        <div className="bg-white rounded-xl shadow overflow-y-auto" style={{ height: 400 }} onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}>
+          <div style={{ height: filteredTasks.length * ROW_HEIGHT, position: "relative" }}>
             {visibleTasks.map((task, i) => {
               const index = startIndex + i;
 
               return (
                 <div
                   key={task.id}
-                  style={{
-                    position: "absolute",
-                    top: index * ROW_HEIGHT,
-                    left: 0,
-                    right: 0,
-                  }}
+                  style={{ position: "absolute", top: index * ROW_HEIGHT, left: 0, right: 0 }}
                   className="flex flex-col md:flex-row md:justify-between md:items-center p-4 border-b gap-2"
                 >
                   <div>{task.title}</div>
@@ -292,7 +231,7 @@ function App() {
                   <select
                     value={task.status}
                     onChange={(e) =>
-                      updateTaskStatus(task.id, e.target.value)
+                      updateTaskStatus(task.id, e.target.value as Status)
                     }
                   >
                     <option value="todo">Todo</option>
@@ -301,10 +240,7 @@ function App() {
                     <option value="done">Done</option>
                   </select>
 
-                  <button
-                    onClick={() => deleteTask(task.id)}
-                    className="text-red-500 hover:underline"
-                  >
+                  <button onClick={() => deleteTask(task.id)} className="text-red-500">
                     Delete
                   </button>
                 </div>

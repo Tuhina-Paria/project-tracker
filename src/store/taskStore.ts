@@ -3,7 +3,14 @@ import { create } from "zustand";
 export type Task = {
   id: string;
   title: string;
-  status: "todo" | "inprogress" | "done";
+
+  status: "todo" | "inprogress" | "review" | "done"; // ✅ fixed
+
+  priority: "low" | "medium" | "high" | "critical"; // ✅ added
+
+  assignee: string; // ✅ added
+
+  dueDate?: string; // optional
 };
 
 type TaskState = {
