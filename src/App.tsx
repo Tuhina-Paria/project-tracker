@@ -9,7 +9,6 @@ function App() {
   const addTask = useTaskStore((state) => state.addTask);
   const updateTaskStatus = useTaskStore((state) => state.updateTaskStatus);
   const deleteTask = useTaskStore((state) => state.deleteTask);
-  const editTask = useTaskStore((state) => state.editTask);
 
   const [view, setView] = useState("kanban");
 
@@ -23,7 +22,7 @@ function App() {
 
   const [scrollTop, setScrollTop] = useState(0);
 
-  // ✅ AVATAR LOGIC (person 1 → P1)
+  // Avatar (person 1 → P1)
   const getAvatar = (name: string) => {
     if (!name) return "NA";
     const match = name.match(/\d+/);
@@ -31,24 +30,22 @@ function App() {
     return name.charAt(0).toUpperCase();
   };
 
-  // FILTER
+  // Filter
   const filteredTasks = tasks.filter((task) => {
-    const matchSearch = task.title
-      .toLowerCase()
-      .includes(search.toLowerCase());
-
-    const matchPriority =
-      priorityFilter === "all" || task.priority === priorityFilter;
-
-    return matchSearch && matchPriority;
+    return (
+      task.title.toLowerCase().includes(search.toLowerCase()) &&
+      (priorityFilter === "all" || task.priority === priorityFilter)
+    );
   });
 
-  // ✅ VIRTUAL SCROLL
+  // Virtual Scroll
   const startIndex = Math.floor(scrollTop / ROW_HEIGHT);
-  const endIndex = startIndex + VISIBLE_COUNT;
-  const visibleTasks = filteredTasks.slice(startIndex, endIndex);
+  const visibleTasks = filteredTasks.slice(
+    startIndex,
+    startIndex + VISIBLE_COUNT
+  );
 
-  // ADD TASK
+  // Add Task
   const handleAddTask = () => {
     if (!title.trim()) return;
 
@@ -65,27 +62,32 @@ function App() {
     setAssignee("");
   };
 
-  // DRAG
+  // Drag & Drop (FIXED)
   const handleDragStart = (e: React.DragEvent, id: string) => {
     e.dataTransfer.setData("taskId", id);
+    e.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDrop = (e: React.DragEvent, status: string) => {
+  const handleDrop = (e: React.DragEvent, newStatus: string) => {
+    e.preventDefault();
     const id = e.dataTransfer.getData("taskId");
-    updateTaskStatus(id, status);
+    if (!id) return;
+    updateTaskStatus(id, newStatus);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  // KANBAN COLUMN
-  const renderColumn = (status: string, title: string) => {
-    const columnTasks = filteredTasks.filter((t) => t.status === status);
+  // Column
+  const renderColumn = (colStatus: string, title: string) => {
+    const columnTasks = filteredTasks.filter(
+      (t) => t.status === colStatus
+    );
 
     return (
       <div
-        onDrop={(e) => handleDrop(e, status)}
+        onDrop={(e) => handleDrop(e, colStatus)}
         onDragOver={handleDragOver}
         className="bg-white p-4 rounded-2xl shadow-lg border min-h-[350px]"
       >
@@ -98,8 +100,9 @@ function App() {
             key={task.id}
             draggable
             onDragStart={(e) => handleDragStart(e, task.id)}
-            className="p-4 mb-3 bg-white rounded-xl shadow hover:shadow-lg hover:-translate-y-1 transition"
+            className="p-4 mb-3 bg-white rounded-xl shadow hover:shadow-xl hover:-translate-y-1 transition cursor-grab"
           >
+            {/* Title + Priority */}
             <div className="flex justify-between items-center mb-2">
               <span className="font-medium">{task.title}</span>
 
@@ -118,8 +121,9 @@ function App() {
               </span>
             </div>
 
+            {/* Assignee */}
             <div className="flex items-center gap-2">
-              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold shadow">
+              <div className="w-9 h-9 flex items-center justify-center rounded-full bg-gradient-to-r from-purple-500 to-blue-500 text-white text-sm font-bold">
                 {getAvatar(task.assignee)}
               </div>
 
@@ -127,6 +131,14 @@ function App() {
                 {task.assignee || "Unassigned"}
               </span>
             </div>
+
+            {/* Delete */}
+            <button
+              onClick={() => deleteTask(task.id)}
+              className="mt-2 text-xs text-red-500 hover:underline"
+            >
+              Delete
+            </button>
           </div>
         ))}
       </div>
@@ -134,43 +146,44 @@ function App() {
   };
 
   return (
-    <div className="p-6 bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
+    <div className="p-4 md:p-6 bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen">
 
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">
+      <h1 className="text-xl md:text-3xl font-bold mb-6 text-gray-800">
         🚀 Task Manager Dashboard
       </h1>
 
-      {/* VIEW SWITCH */}
-      <div className="mb-4 flex gap-3">
+      {/* View Switch */}
+      <div className="mb-4 flex flex-wrap gap-3">
         <button
           onClick={() => setView("kanban")}
-          className="px-4 py-2 rounded-lg bg-white shadow hover:bg-gray-200 transition"
+          className="px-4 py-2 rounded-lg bg-white shadow hover:bg-gray-200"
         >
           Kanban
         </button>
+
         <button
           onClick={() => setView("list")}
-          className="px-4 py-2 rounded-lg bg-white shadow hover:bg-gray-200 transition"
+          className="px-4 py-2 rounded-lg bg-white shadow hover:bg-gray-200"
         >
           List
         </button>
       </div>
 
-      {/* ADD TASK */}
+      {/* Add Task */}
       <div className="mb-6 p-5 bg-white rounded-2xl shadow-lg border">
         <h2 className="font-semibold mb-3">Add Task</h2>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
           <input
             placeholder="Task title..."
-            className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+            className="px-3 py-2 border rounded-lg"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
 
           <input
             placeholder="Assignee (person 1)..."
-            className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+            className="px-3 py-2 border rounded-lg"
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}
           />
@@ -199,15 +212,15 @@ function App() {
 
           <button
             onClick={handleAddTask}
-            className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition"
+            className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
           >
             Add
           </button>
         </div>
       </div>
 
-      {/* SEARCH + FILTER */}
-      <div className="flex gap-3 mb-4">
+      {/* Search + Filter */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <input
           placeholder="Search..."
           className="px-3 py-2 border rounded-lg flex-1"
@@ -228,9 +241,9 @@ function App() {
         </select>
       </div>
 
-      {/* KANBAN */}
+      {/* Kanban */}
       {view === "kanban" && (
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {renderColumn("todo", "Todo")}
           {renderColumn("inprogress", "In Progress")}
           {renderColumn("review", "Review")}
@@ -238,7 +251,7 @@ function App() {
         </div>
       )}
 
-      {/* LIST VIEW */}
+      {/* List View */}
       {view === "list" && (
         <div
           className="bg-white rounded-xl shadow overflow-y-auto"
@@ -263,7 +276,7 @@ function App() {
                     left: 0,
                     right: 0,
                   }}
-                  className="flex justify-between items-center p-4 border-b hover:bg-gray-100 transition"
+                  className="flex flex-col md:flex-row md:justify-between md:items-center p-4 border-b gap-2"
                 >
                   <div>{task.title}</div>
 
