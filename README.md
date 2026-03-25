@@ -188,7 +188,7 @@ src/
 
 ---
 
-🔗 **Live Demo:** [task-manager-dashboard](https://task-manager-dashbord.vercel)
+🔗 **Live Demo:** [task-manager-dashboard](task-manager-dashbord-git-main-tuhina-parias-projects.vercel.app)
 
 ## 🙌 Final Note
 
